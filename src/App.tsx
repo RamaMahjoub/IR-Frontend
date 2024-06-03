@@ -1,3 +1,9 @@
+import { CircularProgress } from '@mui/material';
+import Autocomplete from '@mui/material/Autocomplete';
+import Button from '@mui/material/Button';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Tab from '@mui/material/Tab';
@@ -6,12 +12,6 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { SyntheticEvent, useDeferredValue, useEffect, useState } from 'react';
 import './App.css';
-import Autocomplete from '@mui/material/Autocomplete';
-import Button from '@mui/material/Button';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import { CircularProgress } from '@mui/material';
 
 function App() {
 
@@ -30,13 +30,27 @@ function App() {
   const fetchSearchAnswers = async () => {
     console.log("loading")
     setLoading(true)
-    await fetch(`http://192.168.1.108:8001/search?dataset_name=${datasetName}&query=${searchQuery}`)
+    const crawling = value === 0 ? false : true
+    await fetch(`http://192.168.1.108:8001/search?dataset_name=${datasetName}&query=${searchQuery}&crawling=${crawling}`)
       .then(response => response.json())
       .then(data => setData(data))
       .catch(error => console.error('Error:', error))
       .finally(() => setLoading(false));
     console.log("finish loading")
   }
+
+  const fetchSearchAnswersWithWordEmbedding = async () => {
+    console.log("loading word embedding")
+    setLoading(true)
+    await fetch(`http://192.168.1.108:8003/search?dataset_name=${datasetName}&query=${searchQuery}`)
+      .then(response => response.json())
+      .then(data => setData(data))
+      .catch(error => console.error('Error:', error))
+      .finally(() => setLoading(false));
+    console.log("finish loading word embedding")
+  }
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,6 +74,7 @@ function App() {
       <Tabs value={value} onChange={handleChange}>
         <Tab label="Normal Search" id={`tab-${0}`} />
         <Tab label="Crawling" id={`tab-${1}`} />
+        <Tab label="Word Embedding" id={`tab-${2}`} />
       </Tabs>
       <div style={{ display: 'flex', gap: "15px" }}>
 
@@ -90,9 +105,9 @@ function App() {
           onChange={(event: SelectChangeEvent) => setDatasetName(event.target.value)}
         >
           <MenuItem value={"science"}>Science</MenuItem>
-          <MenuItem value={"recreation"}>Recreation</MenuItem>
+          {value !== 1 && <MenuItem value={"recreation"}>Recreation</MenuItem>}
         </Select>
-        <Button variant='contained' onClick={fetchSearchAnswers}>Search</Button>
+        <Button variant='contained' onClick={value === 2 ? fetchSearchAnswersWithWordEmbedding : fetchSearchAnswers}>Search</Button>
       </div>
       {loading ? <CircularProgress /> :
         <div>
